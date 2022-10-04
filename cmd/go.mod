@@ -1,10 +1,18 @@
-module github/com/shmul/bekind
+module main
 
 go 1.19
 
-require github.com/miekg/dns v1.1.50
+replace github.com/shmul/bekind => ../
 
 require (
+	github.com/jessevdk/go-flags v1.5.0
+	github.com/phuslu/log v1.0.81
+	github.com/robfig/cron/v3 v3.0.1
+	github.com/shmul/bekind v0.0.0-00010101000000-000000000000
+)
+
+require (
+	github.com/miekg/dns v1.1.50 // indirect
 	golang.org/x/mod v0.4.2 // indirect
 	golang.org/x/net v0.0.0-20210726213435-c6fcb2dbf985 // indirect
 	golang.org/x/sys v0.0.0-20210630005230-0f9fa26af87c // indirect
