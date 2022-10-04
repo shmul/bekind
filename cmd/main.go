@@ -17,6 +17,7 @@ type (
 	dnsOpts struct {
 		Domain  string            `short:"d" long:"domain" description:"base domain to use" required:"true"`
 		Port    int               `short:"p" long:"port" description:"Bind port" default:"7353"`
+		TTL     int               `long:"ttl" description:"default TTL (secs)" default:"30"`
 		Records map[string]string `short:"r" long:"record" description:"fixed dns record - name:address"`
 	}
 )
