@@ -29,7 +29,7 @@ var (
 
 	opts struct {
 		Verbose    bool    `short:"v" long:"verbose" description:"Show verbose debug information"`
-		Level      string  `long:"level" default:"info" description:"log level"`
+		Level      string  `long:"level" default:"info" description:"log level" value-name:"LEVEL"`
 		StdoutOnly bool    `long:"stdout" description:"log only to stdout when running in terminal"`
 		Version    version `command:"version"`
 		DNS        dnsOpts `command:"dns"`
@@ -78,6 +78,10 @@ func setupLogging() {
 
 func setupAndExecute(command flags.Commander, args []string) error {
 	setupLogging()
+
+	if opts.Verbose {
+		flags.NewIniParser(parser).Write(os.Stdout, flags.IniDefault)
+	}
 	return command.Execute(args)
 }
 

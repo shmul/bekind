@@ -8,6 +8,7 @@ import (
 
 	miekgdns "github.com/miekg/dns"
 	"github.com/phuslu/log"
+	"github.com/shmul/bekind/pkg/ids"
 )
 
 type Config struct {
@@ -21,6 +22,7 @@ type Server struct {
 	Config
 	impl *miekgdns.Server
 	l    log.Logger
+	g    func() string
 }
 
 func New(c Config) (*Server, error) {
@@ -29,6 +31,7 @@ func New(c Config) (*Server, error) {
 		l:      log.DefaultLogger,
 	}
 	s.l.Context = log.NewContext(nil).Str("pkg", "dns").Value()
+	s.g, _ = ids.Generator(12)
 	if !strings.HasSuffix(s.Domain, ".") {
 		s.Domain = s.Domain + "."
 	}
@@ -63,6 +66,14 @@ func (s *Server) parseQuery(m *miekgdns.Msg, remote net.Addr) {
 				return true
 			}
 		}
+
+		// TODO - also look for N.id and generate N lengthed ids
+		if stripped == "id" || stripped == "key" || stripped == "nanoid" {
+			if answer(fmt.Sprintf("%s 1 TXT %s", q.Name, s.g())) == nil {
+				return true
+			}
+		}
+
 		return false
 	}
 
