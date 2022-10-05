@@ -1,0 +1,21 @@
+---
+- name: Create users and groups
+  hosts: prod
+  tasks:
+    - name: Ensure group "bekind" exists
+      become: true
+      group:
+        name: bekind
+        state: present
+
+    - name: Add user "bekind"
+      become: true
+      user:
+        name: bekind
+        groups: bekind
+        shell: /sbin/nologin
+        create_home: no
+        password: ''
+        append: yes
+        comment: "Bekind nologin User"
+        state: present

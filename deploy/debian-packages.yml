@@ -1,0 +1,12 @@
+---
+- name: Playbook to install require Debian packages
+  hosts: prod
+  become: true
+  tasks:
+    - name: Ansible apt install required packages
+      apt:
+        update_cache: yes
+        name:
+          - dnsutils
+          - wireguard
+        state: present

@@ -1,0 +1,12 @@
+---
+- name: Install Oh My Zsh
+  hosts: prod
+  roles:
+    - role: gantsign.oh-my-zsh
+      users:
+        - username: shmulr
+          oh_my_zsh:
+            theme: crcandy
+        - username: root
+          oh_my_zsh:
+            theme: bureau

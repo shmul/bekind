@@ -1,0 +1,19 @@
+---
+- name: Copy bekind_linux to its new home
+  hosts: prod
+  tasks:
+    - name: Create dest bekind dirs
+      become: true
+      file:
+        path: /opt/bekind/
+        mode: '0744'
+        state: directory
+
+    - name: Copy bekind_linux to its new home
+      become: true
+      copy:
+        src: ../cmd/bekind_linux
+        dest: /opt/bekind/bekind
+        owner: bekind
+        group: bekind
+        mode: '0744'
