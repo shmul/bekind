@@ -25,6 +25,11 @@ type Server struct {
 	g    func() string
 }
 
+var helpLines = []string{
+	"ip, my, myip - caller ip address",
+	"id, key, nanoid - random id",
+}
+
 func New(c Config) (*Server, error) {
 	s := &Server{
 		Config: c,
@@ -51,6 +56,10 @@ func (s *Server) parseQuery(m *miekgdns.Msg, remote net.Addr) {
 		return err
 	}
 
+	txtAnswer := func(name, msg string) error {
+		return answer(fmt.Sprintf("%s 1 TXT %s", name, msg))
+	}
+
 	aRecord := func(q miekgdns.Question) bool {
 		s.l.Info().Str("q", q.Name).Msg("parseQuery")
 		stripped := strings.TrimSuffix(q.Name, "."+s.Domain)
@@ -58,18 +67,18 @@ func (s *Server) parseQuery(m *miekgdns.Msg, remote net.Addr) {
 			answer(fmt.Sprintf("%s %d A %s", q.Name, s.TTL, ip.String())) == nil {
 			return true
 		}
+		switch stripped {
 
-		if stripped == "ip" || stripped == "my" || stripped == "myip" {
+		case "ip", "my", "myip":
 			s.l.Info().Str("ip", remote.String()).Msg("parseQuery")
 			parts := strings.Split(remote.String(), ":")
-			if answer(fmt.Sprintf("%s 1 TXT %s", q.Name, parts[0])) == nil {
+			if txtAnswer(q.Name, parts[0]) == nil {
 				return true
 			}
-		}
 
-		// TODO - also look for N.id and generate N lengthed ids
-		if stripped == "id" || stripped == "key" || stripped == "nanoid" {
-			if answer(fmt.Sprintf("%s 1 TXT %s", q.Name, s.g())) == nil {
+		case "id", "key", "nanoid":
+			// TODO - also look for N.id and generate N lengthed ids
+			if txtAnswer(q.Name, s.g()) == nil {
 				return true
 			}
 		}

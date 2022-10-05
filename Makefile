@@ -14,6 +14,7 @@ BUILD_DATE := $(shell date '+%Y-%m-%dT%H:%M:%S')
 BRANCH := $(shell git branch --show-current)
 PVARS := main
 LDFLAGS := "-X '${PVARS}.Branch=${BRANCH}' -X '${PVARS}.Timestamp=${BUILD_DATE}' -X '${PVARS}.Revision=${HASH}'"
+LINUX_FLAGS := CGO_ENABLED=0 GOOS=linux GOARCH=amd64
 DOCKER_TAG := bekind:${HASH}
 
 ifeq ($(VERBOSE),1)
@@ -26,16 +27,18 @@ endif
 
 .PHONY: clean test build build-docker all
 
-all: build-cmd
+all: build
 
-build-cmd: build
+build:
 	$(Q) cd cmd; $(GOBUILD) -o $(BINARY_NAME)  -ldflags=$(LDFLAGS) .
+
+# Cross compilation
+build-linux:
+	$(Q) cd cmd; $(LINUX_FLAGS) $(GOBUILD) -o $(BINARY_LINUX)  -ldflags=$(LDFLAGS) .
 
 tidy-cmd:
 	$(Q) cd cmd; go mod tidy
 
-go-build:
-	$(Q) $(GOBUILD) ./...
 
 
 test:
@@ -45,11 +48,3 @@ clean:
 	$(GOCLEAN)
 	rm -f $(BINARY_NAME)
 	rm -f $(BINARY_LINUX)
-
-run:
-	$(Q) $(GOBUILD) -o $(BINARY_NAME) -v ./...
-	./$(BINARY_NAME)
-
-# Cross compilation
-build-linux:
-	$(Q) CGO_ENABLED=0 GOOS=linux GOARCH=amd64 $(GOBUILD) -o $(BINARY_LINUX) -ldflags=$(LDFLAGS)

@@ -10,15 +10,18 @@ import (
 	"github.com/phuslu/log"
 	"github.com/robfig/cron/v3"
 	"github.com/shmul/bekind/pkg/dns"
+	"github.com/shmul/bekind/pkg/gcp"
 )
 
 type (
 	version struct{}
 	dnsOpts struct {
-		Domain  string            `short:"d" long:"domain" description:"base domain to use" required:"true"`
-		Port    int               `short:"p" long:"port" description:"Bind port" default:"7353"`
-		TTL     int               `long:"ttl" description:"default TTL (secs)" default:"30"`
-		Records map[string]string `short:"r" long:"record" description:"fixed dns record - name:address"`
+		Domain        string            `short:"d" long:"domain" description:"base domain to use" required:"true"`
+		Port          int               `short:"p" long:"port" description:"Bind port" default:"7353"`
+		TTL           int               `long:"ttl" description:"default TTL (secs)" default:"30"`
+		MappedRecords map[string]string `short:"r" long:"record" description:"mapped dns record - name:address"`
+		SelfRecords   []string          `short:"s" long:"self" description:"self dns record (own IP) - name"`
+		ExternalIP    string            `long:"self-addr" description:"self IP address"`
 	}
 )
 
@@ -110,11 +113,19 @@ func (v *version) Execute(args []string) error {
 }
 
 func (d *dnsOpts) Execute(args []string) error {
-	fixed := make(map[string]net.IP)
-	for k, v := range d.Records {
-		fixed[k] = net.ParseIP(v)
+	records := make(map[string]net.IP)
+	for k, v := range d.MappedRecords {
+		records[k] = net.ParseIP(v)
 	}
-	server, err := dns.New(dns.Config{Port: d.Port, Domain: d.Domain, Fixed: fixed})
+	selfAddr, err := gcp.ExternalIP()
+	if err != nil {
+		selfAddr = net.ParseIP(d.ExternalIP)
+	}
+	for _, v := range d.SelfRecords {
+		records[v] = selfAddr
+	}
+
+	server, err := dns.New(dns.Config{Port: d.Port, Domain: d.Domain, Fixed: records})
 	if err != nil {
 		log.Fatal().Err(err)
 	}
