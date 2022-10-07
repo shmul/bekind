@@ -25,6 +25,10 @@ type (
 	}
 )
 
+const (
+	DefaultConfigFile = "config.ini"
+)
+
 var (
 	Branch    string
 	Timestamp string
@@ -73,9 +77,13 @@ func setupLogging() {
 	runner.AddFunc("0 0 * * *", func() { fileWriter.Rotate() })
 	go runner.Run()
 
-	log.DefaultLogger.Writer = &log.MultiEntryWriter{
-		terminalWriter,
-		fileWriter,
+	if terminalWriter != nil {
+		log.DefaultLogger.Writer = &log.MultiEntryWriter{
+			terminalWriter,
+			fileWriter,
+		}
+	} else {
+		log.DefaultLogger.Writer = fileWriter
 	}
 }
 
@@ -90,7 +98,21 @@ func setupAndExecute(command flags.Commander, args []string) error {
 
 func main() {
 	parser.CommandHandler = setupAndExecute
-	if _, err := parser.Parse(); err != nil {
+	f := os.Getenv("BEKIND_CONFIG_FILE")
+	if f == "" {
+		f = DefaultConfigFile
+	}
+	_, err := os.Stat(f)
+	if err == nil {
+		err = flags.NewIniParser(parser).ParseFile(f)
+		if err != nil {
+			log.Error().Err(err)
+			return
+		}
+	}
+	_, err = parser.Parse()
+
+	if err != nil {
 		switch flagsErr := err.(type) {
 		case flags.ErrorType:
 			if flagsErr == flags.ErrHelp {
@@ -119,7 +141,11 @@ func (d *dnsOpts) Execute(args []string) error {
 	}
 	selfAddr, err := gcp.ExternalIP()
 	if err != nil {
+		log.Warn().Err(err).Msg("Execute")
 		selfAddr = net.ParseIP(d.ExternalIP)
+	}
+	if selfAddr != nil {
+		log.Info().IPAddr("self-addr", selfAddr).Msg("Execute")
 	}
 	for _, v := range d.SelfRecords {
 		records[v] = selfAddr

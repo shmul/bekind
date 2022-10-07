@@ -1,0 +1,15 @@
+---
+- name: reload systemd and start bekind service
+  hosts: prod
+  tasks:
+    - name: Reload the SystemD to re-read configurations
+      become: yes
+      systemd:
+        daemon-reload: yes
+
+    - name: Enable the bekind service and start
+      become: yes
+      systemd:
+        name: bekind
+        enabled: yes
+        state: started
