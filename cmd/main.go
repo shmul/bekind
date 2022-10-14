@@ -1,16 +1,22 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"net"
+	"net/http"
+	"net/http/httputil"
 	"os"
 	"time"
 
 	"github.com/jessevdk/go-flags"
+	"github.com/labstack/echo/v4"
 	"github.com/phuslu/log"
 	"github.com/robfig/cron/v3"
 	"github.com/shmul/bekind/pkg/dns"
 	"github.com/shmul/bekind/pkg/gcp"
+	"github.com/shmul/bekind/pkg/ids"
+	"github.com/shmul/bekind/pkg/web"
 )
 
 type (
@@ -22,6 +28,13 @@ type (
 		MappedRecords map[string]string `short:"r" long:"record" description:"mapped dns record - name:address"`
 		SelfRecords   []string          `short:"s" long:"self" description:"self dns record (own IP) - name"`
 		ExternalIP    string            `long:"self-addr" description:"self IP address"`
+	}
+	webOpts struct {
+		ListenAddrPort string   `long:"listen" description:"address/interface:port to listen on" default:"127.0.0.1:443"`
+		RootDir        string   `long:"root-dir" description:"root dir for static content" required:"true"`
+		CacheDir       string   `long:"cache-dir" description:"cache dir for temporarty files" required:"true"`
+		Hosts          []string `short:"H" long:"host" description:"host name for the certificate"`
+		RateLimit      int      `long:"rate-limit" description:"maximal number of concurrent requests" default:"20"`
 	}
 )
 
@@ -40,6 +53,7 @@ var (
 		StdoutOnly bool    `long:"stdout" description:"log only to stdout when running in terminal"`
 		Version    version `command:"version"`
 		DNS        dnsOpts `command:"dns"`
+		Web        webOpts `command:"web"`
 	}
 	parser = flags.NewParser(&opts, flags.Default)
 )
@@ -106,22 +120,15 @@ func main() {
 	if err == nil {
 		err = flags.NewIniParser(parser).ParseFile(f)
 		if err != nil {
-			log.Error().Err(err)
-			return
+			log.Warn().Err(err).Str("file", f).Msg("main - config file")
 		}
 	}
 	_, err = parser.Parse()
 
 	if err != nil {
-		switch flagsErr := err.(type) {
-		case flags.ErrorType:
-			if flagsErr == flags.ErrHelp {
-				os.Exit(0)
-			}
-			log.Error().Err(err)
-			os.Exit(1)
-		default:
-			log.Error().Err(err)
+		e, ok := err.(*flags.Error)
+		if !ok || (e.Type != flags.ErrHelp && e.Type != flags.ErrCommandRequired) {
+			fmt.Println(err)
 			os.Exit(1)
 		}
 	}
@@ -153,7 +160,60 @@ func (d *dnsOpts) Execute(args []string) error {
 
 	server, err := dns.New(dns.Config{Port: d.Port, Domain: d.Domain, Fixed: records})
 	if err != nil {
-		log.Fatal().Err(err)
+		log.Fatal().Err(err).Msg("dns - Execute")
 	}
 	return server.Run()
+}
+
+var handlers = []web.RouteSetup{
+	{
+		Prefix: "/id",
+		Setup: func(w *web.Web, g *echo.Group) {
+			g.GET("", func(c echo.Context) error {
+				id, err := ids.Generator(12)
+				if err != nil {
+					return c.String(http.StatusInternalServerError, err.Error())
+				}
+				return c.String(http.StatusOK, id()+"\n")
+			})
+		},
+	},
+
+	{
+		Prefix: "/ip",
+		Setup: func(w *web.Web, g *echo.Group) {
+			g.GET("", func(c echo.Context) error {
+				return c.String(http.StatusOK, c.RealIP()+"\n")
+			})
+		},
+	},
+
+	{
+		Prefix: "/echo",
+		Setup: func(w *web.Web, g *echo.Group) {
+			g.GET("", func(c echo.Context) error {
+				reqDump, err := httputil.DumpRequest(c.Request(), true)
+				if err != nil {
+					return c.String(http.StatusInternalServerError, err.Error())
+				}
+				return c.String(http.StatusOK, string(reqDump))
+			})
+		},
+	},
+}
+
+func (w *webOpts) Execute(args []string) error {
+	c := web.Config{
+		ListenAddrPort: w.ListenAddrPort,
+		RootDir:        w.RootDir,
+		CacheDir:       w.CacheDir,
+		Hosts:          w.Hosts,
+		RateLimit:      w.RateLimit,
+	}
+	wb, err := web.New(context.TODO(), c)
+	if err != nil {
+		log.Fatal().Err(err).Msg("web - Execute")
+	}
+	wb.SetupRoutes(handlers)
+	return wb.Run()
 }
