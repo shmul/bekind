@@ -5,9 +5,17 @@
     - name: Create dest bekind dirs
       become: true
       file:
-        path: /opt/bekind/
+        path: "{{ item }}"
         mode: '0755'
         state: directory
+        owner: bekind
+        group: bekind
+      loop:
+        - /opt/bekind/web
+        - /opt/bekind/logs
+        - /opt/bekind/cache
+      tags:
+        - dirs
 
     - name: Copy bekind_linux to its new home
       become: true
@@ -16,4 +24,15 @@
         dest: /opt/bekind/bekind
         owner: bekind
         group: bekind
-        mode: '0744'
+        mode: '0755'
+      tags:
+        - binary
+
+    - name: Enable the bekind service and start
+      become: yes
+      systemd:
+        name: bekind
+        enabled: yes
+        state: restarted
+      tags:
+        - binary

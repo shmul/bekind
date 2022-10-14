@@ -3,10 +3,12 @@ package main
 import (
 	"context"
 	"fmt"
+	"io"
 	"net"
 	"net/http"
 	"net/http/httputil"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/jessevdk/go-flags"
@@ -30,6 +32,7 @@ type (
 		ExternalIP    string            `long:"self-addr" description:"self IP address"`
 	}
 	webOpts struct {
+		Domain         string   `short:"d" long:"domain" description:"base domain to use" required:"true"`
 		ListenAddrPort string   `long:"listen" description:"address/interface:port to listen on" default:"127.0.0.1:443"`
 		RootDir        string   `long:"root-dir" description:"root dir for static content" required:"true"`
 		CacheDir       string   `long:"cache-dir" description:"cache dir for temporarty files" required:"true"`
@@ -55,10 +58,11 @@ var (
 		DNS        dnsOpts `command:"dns"`
 		Web        webOpts `command:"web"`
 	}
-	parser = flags.NewParser(&opts, flags.Default)
+	parser        = flags.NewParser(&opts, flags.Default)
+	defaultWriter io.Writer
 )
 
-func setupLogging() {
+func setupLogging() io.Writer {
 	log.DefaultLogger = log.Logger{
 		Level:      log.ParseLevel(opts.Level),
 		TimeFormat: "06-01-02T15:04:05.999",
@@ -76,7 +80,7 @@ func setupLogging() {
 
 	if opts.StdoutOnly {
 		log.DefaultLogger.Writer = terminalWriter
-		return
+		return nil
 	}
 
 	fileWriter := &log.FileWriter{
@@ -90,19 +94,22 @@ func setupLogging() {
 	runner := cron.New(cron.WithLocation(time.Local))
 	runner.AddFunc("0 0 * * *", func() { fileWriter.Rotate() })
 	go runner.Run()
+	fileWriter.Rotate() // rotate now also
 
 	if terminalWriter != nil {
 		log.DefaultLogger.Writer = &log.MultiEntryWriter{
 			terminalWriter,
 			fileWriter,
 		}
-	} else {
-		log.DefaultLogger.Writer = fileWriter
+		return nil
 	}
+
+	log.DefaultLogger.Writer = fileWriter
+	return fileWriter
 }
 
 func setupAndExecute(command flags.Commander, args []string) error {
-	setupLogging()
+	defaultWriter = setupLogging()
 
 	if opts.Verbose {
 		flags.NewIniParser(parser).Write(os.Stdout, flags.IniDefault)
@@ -167,6 +174,7 @@ func (d *dnsOpts) Execute(args []string) error {
 
 var handlers = []web.RouteSetup{
 	{
+		Host:   "id",
 		Prefix: "/id",
 		Setup: func(w *web.Web, g *echo.Group) {
 			g.GET("", func(c echo.Context) error {
@@ -180,6 +188,7 @@ var handlers = []web.RouteSetup{
 	},
 
 	{
+		Host:   "ip",
 		Prefix: "/ip",
 		Setup: func(w *web.Web, g *echo.Group) {
 			g.GET("", func(c echo.Context) error {
@@ -189,6 +198,7 @@ var handlers = []web.RouteSetup{
 	},
 
 	{
+		Host:   "echo",
 		Prefix: "/echo",
 		Setup: func(w *web.Web, g *echo.Group) {
 			g.GET("", func(c echo.Context) error {
@@ -202,8 +212,25 @@ var handlers = []web.RouteSetup{
 	},
 }
 
+func fqdn(host, domain string) string {
+	return host + "." + domain
+}
+
 func (w *webOpts) Execute(args []string) error {
+	for i, h := range w.Hosts {
+		for j, hndlr := range handlers {
+			if hndlr.Host == h {
+				handlers[j].Host = fqdn(hndlr.Host, w.Domain)
+				continue
+			}
+		}
+		if !strings.HasPrefix(h, w.Domain) {
+			w.Hosts[i] = fqdn(h, w.Domain)
+		}
+	}
+
 	c := web.Config{
+		Writer:         defaultWriter,
 		ListenAddrPort: w.ListenAddrPort,
 		RootDir:        w.RootDir,
 		CacheDir:       w.CacheDir,

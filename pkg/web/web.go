@@ -3,6 +3,7 @@ package web
 import (
 	"context"
 	"crypto/tls"
+	"io"
 	"net/http"
 	"os"
 	"strings"
@@ -20,6 +21,7 @@ import (
 )
 
 type Config struct {
+	Writer         io.Writer
 	ListenAddrPort string `default:"127.0.0.1:443"`
 	RootDir        string
 	CacheDir       string
@@ -27,16 +29,21 @@ type Config struct {
 	RateLimit      int `default:"100"`
 }
 
-type Web struct {
+type host struct {
 	c Config
 	e *echo.Echo
-	s http.Server
-	l log.Logger
+}
 
-	ctx context.Context
+type Web struct {
+	host
+	s     http.Server
+	l     log.Logger
+	hosts map[string]host
+	ctx   context.Context
 }
 
 type RouteSetup struct {
+	Host   string
 	Prefix string
 	Setup  func(w *Web, g *echo.Group)
 }
@@ -52,10 +59,13 @@ func accessible(path string) error {
 func New(ctx context.Context, c Config) (*Web, error) {
 	defaults.SetDefaults(&c)
 	w := &Web{
-		c:   c,
-		e:   echo.New(),
-		ctx: ctx,
-		l:   log.DefaultLogger,
+		host: host{
+			c: c,
+			e: echo.New(),
+		},
+		ctx:   ctx,
+		l:     log.DefaultLogger,
+		hosts: make(map[string]host),
 	}
 	w.l.Context = log.NewContext(nil).Str("pkg", "web").Value()
 
@@ -91,10 +101,21 @@ func New(ctx context.Context, c Config) (*Web, error) {
 
 func (w *Web) SetupRoutes(handlers []RouteSetup) error {
 	for _, h := range handlers {
-		if !strings.HasPrefix(h.Prefix, "/") {
-			h.Prefix = "/" + h.Prefix
+		ec := w.e
+		if h.Host != "" {
+			w.hosts[h.Host] = host{
+				c: w.c,
+				e: echo.New(),
+			}
+			ec = w.hosts[h.Host].e // use a different echo
+			h.Prefix = ""          // we ignore the prefix
+			w.l.Info().Str("host", h.Host).Msg("SetupRoutes")
+		} else {
+			if !strings.HasPrefix(h.Prefix, "/") {
+				h.Prefix = "/" + h.Prefix
+			}
 		}
-		h.Setup(w, w.e.Group(h.Prefix))
+		h.Setup(w, ec.Group(h.Prefix))
 	}
 	return nil
 }
@@ -102,11 +123,31 @@ func (w *Web) SetupRoutes(handlers []RouteSetup) error {
 func (w *Web) Run() error {
 	w.e.Use(
 		middleware.Recover(),
-		middleware.Logger(),
+		middleware.LoggerWithConfig(middleware.LoggerConfig{
+			Output: w.c.Writer,
+		}),
 		middleware.RateLimiter(middleware.NewRateLimiterMemoryStore(rate.Limit(w.c.RateLimit))),
 	)
 	onLocalhost := strings.HasPrefix(w.c.ListenAddrPort, "localhost:") || strings.HasPrefix(w.c.ListenAddrPort, "127.0.0.1:")
 	w.l.Info().Bool("localhost", onLocalhost).Msg("Run - start")
+
+	w.e.Any("/*", func(c echo.Context) error {
+		req := c.Request()
+		res := c.Response()
+		parts := strings.Split(req.Host, ":")
+		host := w.hosts[parts[0]]
+		ec := w.e
+
+		if host.e == nil {
+			w.l.Warn().Str("host", req.Host).Msg("Any - not found")
+			return echo.ErrNotFound
+		} else {
+			ec = host.e
+		}
+		ec.ServeHTTP(res, req)
+		return nil
+	})
+
 	var err error
 	if onLocalhost {
 		err = w.s.ListenAndServe()

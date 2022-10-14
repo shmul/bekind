@@ -19,7 +19,7 @@
         Group=bekind
         Environment="BEKIND_CONFIG_FILE=/opt/bekind/config.ini"
         WorkingDirectory=/opt/bekind/
-        ExecStart=/opt/bekind/bekind dns
+        ExecStart=/opt/bekind/bekind web
         #ExecStop=/opt/tomcat8/bin/shutdown.sh
         Restart=always
         AmbientCapabilities=CAP_NET_BIND_SERVICE
