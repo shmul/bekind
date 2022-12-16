@@ -26,6 +26,7 @@ type Config struct {
 	RootDir        string
 	CacheDir       string
 	Hosts          []string
+	DefaultHost    string
 	RateLimit      int `default:"100"`
 }
 
@@ -136,8 +137,10 @@ func (w *Web) Run() error {
 		res := c.Response()
 		parts := strings.Split(req.Host, ":")
 		host := w.hosts[parts[0]]
+		if host.e == nil {
+			host = w.hosts[w.c.DefaultHost]
+		}
 		ec := w.e
-
 		if host.e == nil {
 			w.l.Warn().Str("host", req.Host).Msg("Any - not found")
 			return echo.ErrNotFound

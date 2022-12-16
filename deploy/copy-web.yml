@@ -1,0 +1,15 @@
+---
+- name: Copy bekind web assets
+  hosts: prod
+  tasks:
+
+    - name: Copy static files
+      become: true
+      copy:
+        src: ../web/
+        dest: /opt/bekind/web/
+        owner: bekind
+        group: bekind
+        mode: '0644'
+      tags:
+        - web

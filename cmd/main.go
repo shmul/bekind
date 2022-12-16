@@ -13,6 +13,7 @@ import (
 
 	"github.com/jessevdk/go-flags"
 	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v4/middleware"
 	"github.com/phuslu/log"
 	"github.com/robfig/cron/v3"
 	"github.com/shmul/bekind/pkg/dns"
@@ -34,7 +35,7 @@ type (
 	webOpts struct {
 		Domain         string   `short:"d" long:"domain" description:"base domain to use" required:"true"`
 		ListenAddrPort string   `long:"listen" description:"address/interface:port to listen on" default:"127.0.0.1:443"`
-		RootDir        string   `long:"root-dir" description:"root dir for static content" required:"true"`
+		WebDir         string   `long:"web-dir" description:"root dir for static content" required:"true"`
 		CacheDir       string   `long:"cache-dir" description:"cache dir for temporarty files" required:"true"`
 		Hosts          []string `short:"H" long:"host" description:"host name for the certificate"`
 		RateLimit      int      `long:"rate-limit" description:"maximal number of concurrent requests" default:"20"`
@@ -229,12 +230,24 @@ func (w *webOpts) Execute(args []string) error {
 		}
 	}
 
+	handlers = append(handlers, web.RouteSetup{
+		Host:   "www",
+		Prefix: "/",
+		Setup: func(wb *web.Web, g *echo.Group) {
+			g.Use(middleware.StaticWithConfig(middleware.StaticConfig{
+				Root:    w.WebDir,
+				Skipper: middleware.DefaultSkipper,
+				Index:   "index.html",
+			}))
+		},
+	})
 	c := web.Config{
 		Writer:         defaultWriter,
 		ListenAddrPort: w.ListenAddrPort,
-		RootDir:        w.RootDir,
+		RootDir:        w.WebDir,
 		CacheDir:       w.CacheDir,
 		Hosts:          w.Hosts,
+		DefaultHost:    "www",
 		RateLimit:      w.RateLimit,
 	}
 	wb, err := web.New(context.TODO(), c)
