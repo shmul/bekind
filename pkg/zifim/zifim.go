@@ -31,6 +31,12 @@ const (
           </code>
         </details>
       </article>
+      <div hx-get="/zifim/view/{{.Next}}" hx-swap="outerHTML">
+        <a>Next show...</a>
+      </div>
+`
+	tracksTemplate = `
+
 `
 )
 
@@ -84,17 +90,26 @@ func (z *Module) Setup(wb *web.Web, g *echo.Group) {
 
 func (z *Module) viewShow(c echo.Context) error {
 	d := c.Param("date") // format yy-mm-dd
-	if d == "latest" && len(z.shows) > 0 {
-		d = z.shows[len(z.shows)-1]
+	last := len(z.shows)
+	if d == "latest" && last > 0 {
+		d = z.shows[last-1]
 	}
 	tmpl, err := template.New("one-show").Parse(showTemplate)
 	if err != nil {
 		z.l.Error().Err(err).Msg("oneShow")
 		return echo.NewHTTPError(http.StatusBadRequest, "")
 	}
-	var b bytes.Buffer
 
-	tmpl.Execute(&b, struct{ Date string }{Date: d})
+	next := ""
+	for i := last - 1; i > 0; i-- {
+		if z.shows[i] == d {
+			next = z.shows[i-1]
+			break
+		}
+	}
+
+	var b bytes.Buffer
+	tmpl.Execute(&b, struct{ Date, Next string }{Date: d, Next: next})
 	return c.HTML(http.StatusOK, b.String())
 }
 
