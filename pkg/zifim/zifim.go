@@ -1,10 +1,13 @@
 package zifim
 
 import (
+	"bytes"
 	"fmt"
 	"io"
 	"net/http"
+	"sort"
 	"strings"
+	"text/template"
 	"time"
 
 	"github.com/dghubble/sling"
@@ -16,6 +19,19 @@ import (
 
 const (
 	githubTreesURL = "https://api.github.com/repos/shmul/zifim/git/trees/HEAD?recursive=true"
+
+	showTemplate = `
+      <article>
+        <iframe width="100%" height="120" src="https://www.mixcloud.com/widget/iframe/?hide_cover=1&light=1&feed=/zifim1062fm/20{{.Date}}/" frameborder="0" ></iframe>
+        <details>
+          <summary>Track list</summary>
+          <code>
+            <div hx-get="/zifim/show/{{.Date}}" hx-trigger="revealed">
+            </div>
+          </code>
+        </details>
+      </article>
+`
 )
 
 type Module struct {
@@ -59,14 +75,35 @@ func New() *Module {
 }
 
 func (z *Module) Setup(wb *web.Web, g *echo.Group) {
+	g.GET("/view/:date", z.viewShow)
 	g.GET("/show/:date", z.show)
 	g.GET("/shows", func(c echo.Context) error {
 		return c.JSON(http.StatusOK, z.shows)
 	})
 }
 
+func (z *Module) viewShow(c echo.Context) error {
+	d := c.Param("date") // format yy-mm-dd
+	if d == "latest" && len(z.shows) > 0 {
+		d = z.shows[len(z.shows)-1]
+	}
+	tmpl, err := template.New("one-show").Parse(showTemplate)
+	if err != nil {
+		z.l.Error().Err(err).Msg("oneShow")
+		return echo.NewHTTPError(http.StatusBadRequest, "")
+	}
+	var b bytes.Buffer
+
+	tmpl.Execute(&b, struct{ Date string }{Date: d})
+	return c.HTML(http.StatusOK, b.String())
+}
+
 func (z *Module) show(c echo.Context) error {
 	d := c.Param("date") // format yy-mm-dd
+	if d == "latest" && len(z.shows) > 0 {
+		d = z.shows[len(z.shows)-1]
+		z.l.Info().Msg(d)
+	}
 	parts := strings.Split(d, "-")
 	if len(parts) != 3 {
 		z.l.Warn().Str("date", d).Msg("show")
@@ -106,5 +143,6 @@ func (z *Module) getDirectoryContent() []string {
 			return n.Path[s+1 : e]
 		})
 	z.l.Info().Int("shows", len(shows)).Msg("getDirectoryContent")
+	sort.Strings(shows)
 	return shows
 }

@@ -32,17 +32,9 @@
       </div>
     </header>
     <main class="content">
-      <article>
-        <iframe width="100%" height="120" src="https://www.mixcloud.com/widget/iframe/?hide_cover=1&light=1&feed=%2Fzifim1062fm%2F2022-12-11%2F" frameborder="0" ></iframe>
-        <code>
-          <div hx-get="/zifim/show/22-10-30" hx-trigger="revealed">
-            Put To Messages
-          </div>
-        </code>
-      </article>
+      <div hx-get="/zifim/view/latest" hx-trigger="revealed" hx-swap="outerHTML">
+      </div>
     </main>
 
-    <footer>
-    </footer>
   </body>
 </html>
