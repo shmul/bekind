@@ -230,7 +230,7 @@ func (w *webOpts) Execute(args []string) error {
 		}
 	}
 
-	zfm := &zifim.Module{}
+	zfm := zifim.New()
 	handlers = append(handlers,
 		web.RouteSetup{
 			Host:   "www",
