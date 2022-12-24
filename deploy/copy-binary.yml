@@ -14,6 +14,7 @@
         - /opt/bekind/web
         - /opt/bekind/logs
         - /opt/bekind/cache
+        - /opt/bekind/cache/repo
       tags:
         - dirs
 
@@ -36,3 +37,14 @@
         state: restarted
       tags:
         - binary
+
+    - name: clone tracks
+      become: yes
+      ansible.builtin.git:
+        repo: https://github.com/shmul/zifim.git
+        dest: /opt/bekind/cache/repo
+        single_branch: yes
+        version: master
+        depth: 1
+      tags:
+        - git
