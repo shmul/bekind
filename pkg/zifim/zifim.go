@@ -31,7 +31,7 @@ const (
           </code>
         </details>
       </article>
-      <div hx-get="/zifim/view/{{.Next}}" hx-swap="outerHTML">
+      <div hx-get="/zifim/view/{{.Next}}" hx-swap="outerHTML" hx-trigger="revealed">
         <a>Next show...</a>
       </div>
 `
