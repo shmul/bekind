@@ -7,6 +7,7 @@
     <link rel="stylesheet" href="./simple.css/2.1.1/simple.min.css">
     <link rel="stylesheet" href="./bekind.css">
     <script src="https://kit.fontawesome.com/7041d535c5.js" crossorigin="anonymous"></script>
+    <script src="./htmx/1.8.4/htmx.min.js"></script>
     <title>Zifim - 1062.fm</title>
   </head>
   <body>
@@ -32,25 +33,10 @@
     <main class="content">
       <article>
         <iframe width="100%" height="120" src="https://www.mixcloud.com/widget/iframe/?hide_cover=1&light=1&feed=%2Fzifim1062fm%2F2022-12-11%2F" frameborder="0" ></iframe>
-        <code><!-- https://raw.githubusercontent.com/shmul/zifim/master/2022/22-10-30.txt -->
-          Phish - While My Guitar Gently Weeps
-          Phish - 5:15
-          Umphrey's McGee - Help On The Way > Slipknot! > Jessica
-          Jerry Garcia - I Was Made to Love Her
-          Stevie Wonder - Black Man
-          Stuff - That's The Way Of The World
-          Jade - Music Slave
-          Sivuca - Ain't No Sunshine
-          José Mauro - Apocalipse
-          José Mauro - Memória
-          Bob Dylan - I Don't Believe You (She Acts Like We Never Have Met)
-          Bob Dylan - Tight Connection to My Heart (Has Anyone Seen My Love)
-          Oneness of Juju - All Blues
-          Jean Plum - Back to you
-          Chip Wickham - The Hit
-          Nucleus - The Addison Trip
-          Yes - Starship Trooper
-          Bruce Hornsby - Werewolves Of London
+        <code>
+          <div hx-get="/zifim/show/22-10-30" hx-trigger="revealed">
+            Put To Messages
+          </div>
         </code>
       </article>
     </main>

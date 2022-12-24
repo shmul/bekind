@@ -20,6 +20,7 @@ import (
 	"github.com/shmul/bekind/pkg/gcp"
 	"github.com/shmul/bekind/pkg/ids"
 	"github.com/shmul/bekind/pkg/web"
+	"github.com/shmul/bekind/pkg/zifim"
 )
 
 type (
@@ -197,7 +198,6 @@ var handlers = []web.RouteSetup{
 			})
 		},
 	},
-
 	{
 		Host:   "echo",
 		Prefix: "/echo",
@@ -230,17 +230,25 @@ func (w *webOpts) Execute(args []string) error {
 		}
 	}
 
-	handlers = append(handlers, web.RouteSetup{
-		Host:   "www",
-		Prefix: "/",
-		Setup: func(wb *web.Web, g *echo.Group) {
-			g.Use(middleware.StaticWithConfig(middleware.StaticConfig{
-				Root:    w.WebDir,
-				Skipper: middleware.DefaultSkipper,
-				Index:   "index.html",
-			}))
+	zfm := &zifim.Module{}
+	handlers = append(handlers,
+		web.RouteSetup{
+			Host:   "www",
+			Prefix: "",
+			Setup: func(wb *web.Web, g *echo.Group) {
+				g.Use(middleware.StaticWithConfig(middleware.StaticConfig{
+					Root:    w.WebDir,
+					Skipper: middleware.DefaultSkipper,
+					Index:   "index.html",
+				}))
+			},
 		},
-	})
+		web.RouteSetup{
+			Host:   "www",
+			Prefix: "/zifim",
+			Setup:  zfm.Setup,
+		},
+	)
 	c := web.Config{
 		Writer:         defaultWriter,
 		ListenAddrPort: w.ListenAddrPort,

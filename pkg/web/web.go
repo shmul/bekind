@@ -101,22 +101,29 @@ func New(ctx context.Context, c Config) (*Web, error) {
 }
 
 func (w *Web) SetupRoutes(handlers []RouteSetup) error {
+	setup := func(h RouteSetup, ec *echo.Echo) {
+		h.Setup(w, ec.Group(h.Prefix))
+		w.l.Info().Str("host", h.Host).Str("prefix", h.Prefix).Msg("SetupRoutes")
+	}
+
 	for _, h := range handlers {
-		ec := w.e
-		if h.Host != "" {
-			w.hosts[h.Host] = host{
-				c: w.c,
-				e: echo.New(),
-			}
-			ec = w.hosts[h.Host].e // use a different echo
-			h.Prefix = ""          // we ignore the prefix
-			w.l.Info().Str("host", h.Host).Msg("SetupRoutes")
-		} else {
+		if h.Host == "" {
 			if !strings.HasPrefix(h.Prefix, "/") {
 				h.Prefix = "/" + h.Prefix
 			}
+			setup(h, w.e)
+			continue
 		}
-		h.Setup(w, ec.Group(h.Prefix))
+
+		hst, found := w.hosts[h.Host]
+		if !found {
+			hst = host{
+				c: w.c,
+				e: echo.New(),
+			}
+			w.hosts[h.Host] = hst
+		}
+		setup(h, hst.e)
 	}
 	return nil
 }
