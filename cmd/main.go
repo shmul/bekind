@@ -180,7 +180,7 @@ var handlers = []web.RouteSetup{
 		Prefix: "/id",
 		Setup: func(w *web.Web, g *echo.Group) {
 			g.GET("", func(c echo.Context) error {
-				id, err := ids.Generator(12)
+				id, err := ids.Generator(20)
 				if err != nil {
 					return c.String(http.StatusInternalServerError, err.Error())
 				}

@@ -36,7 +36,7 @@ func New(c Config) (*Server, error) {
 		l:      log.DefaultLogger,
 	}
 	s.l.Context = log.NewContext(nil).Str("pkg", "dns").Value()
-	s.g, _ = ids.Generator(12)
+	s.g, _ = ids.Generator(20)
 	if !strings.HasSuffix(s.Domain, ".") {
 		s.Domain = s.Domain + "."
 	}
