@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"net/http/httputil"
 	"os"
+	"strconv"
 	"strings"
 	"time"
 
@@ -177,21 +178,29 @@ func (d *dnsOpts) Execute(args []string) error {
 var handlers = []web.RouteSetup{
 	{
 		Host:   "id",
-		Prefix: "/id",
+		Prefix: "",
 		Setup: func(w *web.Web, g *echo.Group) {
-			g.GET("", func(c echo.Context) error {
-				id, err := ids.Generator(20)
+			helper := func(c echo.Context, length int64) error {
+				id, err := ids.Generator(int(length))
 				if err != nil {
 					return c.String(http.StatusInternalServerError, err.Error())
 				}
 				return c.String(http.StatusOK, id()+"\n")
+			}
+			g.GET("", func(c echo.Context) error { return helper(c, 20) })
+			g.GET("/:length", func(c echo.Context) error {
+				ln, err := strconv.ParseInt(c.Param("length"), 10, 32)
+				if err != nil {
+					return c.String(http.StatusBadRequest, err.Error())
+				}
+				return helper(c, ln)
 			})
 		},
 	},
 
 	{
 		Host:   "ip",
-		Prefix: "/ip",
+		Prefix: "",
 		Setup: func(w *web.Web, g *echo.Group) {
 			g.GET("", func(c echo.Context) error {
 				return c.String(http.StatusOK, c.RealIP()+"\n")

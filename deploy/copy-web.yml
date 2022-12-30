@@ -1,6 +1,7 @@
 ---
 - name: Copy bekind web assets
   hosts: prod
+  gather_facts: no
   tasks:
 
     - name: Copy static files

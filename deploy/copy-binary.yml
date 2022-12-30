@@ -1,6 +1,7 @@
 ---
 - name: Copy bekind_linux to its new home
   hosts: prod
+  gather_facts: no
   tasks:
     - name: Create dest bekind dirs
       become: true
@@ -37,14 +38,3 @@
         state: restarted
       tags:
         - binary
-
-    - name: clone tracks
-      become: yes
-      ansible.builtin.git:
-        repo: https://github.com/shmul/zifim.git
-        dest: /opt/bekind/cache/repo
-        single_branch: yes
-        version: master
-        depth: 1
-      tags:
-        - git
