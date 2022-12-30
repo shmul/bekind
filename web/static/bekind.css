@@ -1,25 +1,30 @@
 /* Style the header */
 .header {
-  padding: 10px 16px;
+    padding: 10px 16px;
 }
 
 header img {
-    width: 170px;
+    height: auto;
+    width: 100px;
 }
 
 /* Page content */
 .content {
-  padding: 16px;
+    padding: 16px;
 }
 
 /* The sticky class is added to the header with JS when it reaches its scroll position */
 .sticky {
-  position: fixed;
-  top: 0;
-  width: 100%
+    position: fixed;
+    top: 0;
+    width: 100%
 }
 
 /* Add some top padding to the page content to prevent sudden quick movement (as the header gets a new position at the top of the page (position:fixed and top:0) */
 .sticky + .content {
-  padding-top: 250px;
+    padding-top: 250px;
+}
+
+input[type="number"] {
+    width: 80px;
 }
