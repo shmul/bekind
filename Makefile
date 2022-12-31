@@ -48,3 +48,6 @@ clean:
 	$(GOCLEAN)
 	rm -f $(BINARY_NAME)
 	rm -f $(BINARY_LINUX)
+
+deploy-binary:
+	$(Q) ansible-playbook  -i deploy/hosts deploy/copy-binary.yml

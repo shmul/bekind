@@ -227,6 +227,18 @@ func fqdn(host, domain string) string {
 }
 
 func (w *webOpts) Execute(args []string) error {
+	handlers = append(handlers,
+		web.RouteSetup{ // this one is here as it needs the WebDir
+			Host:   "pace",
+			Prefix: "",
+			Setup: func(wb *web.Web, g *echo.Group) {
+				g.Use(middleware.StaticWithConfig(middleware.StaticConfig{
+					Root:    w.WebDir,
+					Skipper: middleware.DefaultSkipper,
+					Index:   "pace.html",
+				}))
+			},
+		})
 	for i, h := range w.Hosts {
 		for j, hndlr := range handlers {
 			if hndlr.Host == h {
@@ -256,17 +268,6 @@ func (w *webOpts) Execute(args []string) error {
 			Host:   "www",
 			Prefix: "/zifim",
 			Setup:  zfm.Setup,
-		},
-		web.RouteSetup{
-			Host:   "pace",
-			Prefix: "",
-			Setup: func(wb *web.Web, g *echo.Group) {
-				g.Use(middleware.StaticWithConfig(middleware.StaticConfig{
-					Root:    w.WebDir,
-					Skipper: middleware.DefaultSkipper,
-					Index:   "pace.html",
-				}))
-			},
 		},
 	)
 	c := web.Config{

@@ -145,15 +145,15 @@ func (w *Web) Run() error {
 		parts := strings.Split(req.Host, ":")
 		host := w.hosts[parts[0]]
 		if host.e == nil {
+			w.l.Warn().Str("host", parts[0]).Msg("Any - using default host")
 			host = w.hosts[w.c.DefaultHost]
 		}
-		ec := w.e
 		if host.e == nil {
 			w.l.Warn().Str("host", req.Host).Msg("Any - not found")
 			return echo.ErrNotFound
-		} else {
-			ec = host.e
 		}
+		ec := host.e
+
 		ec.ServeHTTP(res, req)
 		return nil
 	})
