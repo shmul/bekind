@@ -25,6 +25,6 @@ header img {
     padding-top: 250px;
 }
 
-input[type="number"] {
-    width: 80px;
+.numbers {
+    width: 75px;
 }

@@ -257,6 +257,17 @@ func (w *webOpts) Execute(args []string) error {
 			Prefix: "/zifim",
 			Setup:  zfm.Setup,
 		},
+		web.RouteSetup{
+			Host:   "pace",
+			Prefix: "",
+			Setup: func(wb *web.Web, g *echo.Group) {
+				g.Use(middleware.StaticWithConfig(middleware.StaticConfig{
+					Root:    w.WebDir,
+					Skipper: middleware.DefaultSkipper,
+					Index:   "pace.html",
+				}))
+			},
+		},
 	)
 	c := web.Config{
 		Writer:         defaultWriter,
