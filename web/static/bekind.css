@@ -5,7 +5,7 @@
 
 header img {
     height: auto;
-    width: 100px;
+    width: 80px;
 }
 
 /* Page content */
@@ -26,5 +26,5 @@ header img {
 }
 
 .numbers {
-    width: 75px;
+    width: 65px;
 }

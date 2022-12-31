@@ -50,4 +50,7 @@ clean:
 	rm -f $(BINARY_LINUX)
 
 deploy-binary:
-	$(Q) ansible-playbook  -i deploy/hosts deploy/copy-binary.yml
+	$(Q) ansible-playbook -i deploy/hosts deploy/copy-binary.yml
+
+deploy-web:
+	$(Q) ansible-playbook -i deploy/hosts deploy/copy-web.yml
