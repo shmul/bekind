@@ -128,6 +128,13 @@ func (w *Web) SetupRoutes(handlers []RouteSetup) error {
 	return nil
 }
 
+func redirectToHTTPS() {
+	e := echo.New()
+	e.Pre(middleware.HTTPSRedirect(),
+		middleware.HTTPSWWWRedirect())
+	e.Start(":80")
+}
+
 func (w *Web) Run() error {
 	w.e.Use(
 		middleware.Recover(),
@@ -162,6 +169,7 @@ func (w *Web) Run() error {
 	if onLocalhost {
 		err = w.s.ListenAndServe()
 	} else {
+		go redirectToHTTPS()
 		err = w.s.ListenAndServeTLS("", "")
 	}
 	if err != http.ErrServerClosed {

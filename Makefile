@@ -36,11 +36,6 @@ build:
 build-linux:
 	$(Q) cd cmd; $(LINUX_FLAGS) $(GOBUILD) -o $(BINARY_LINUX)  -ldflags=$(LDFLAGS) .
 
-tidy-cmd:
-	$(Q) cd cmd; go mod tidy
-
-
-
 test:
 	$(Q) $(GOTEST) ./...
 
