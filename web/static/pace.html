@@ -9,6 +9,7 @@
     <script src="https://kit.fontawesome.com/7041d535c5.js" crossorigin="anonymous"></script>
     <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <script src="./htmx/1.8.4/htmx.min.js"></script>
+    <script src="./lscache/1.3.2/lscache.min.js"></script>
     <title>Zifim - Pace Calculator</title>
 
     <script>
@@ -35,6 +36,7 @@
            s = perK(min,sec)*p,
            m = pn(s/60),
            c = pn(s%60);
+       setSavedPace(pc);
        return m+':'+twoD(c);
      }
 
@@ -51,6 +53,18 @@
          return mmss;
        }
        return h+':'+mmss;
+     }
+
+     function getSavedPace(def) {
+       let v = lscache.get('pace');
+       if ( !v ) {
+         return def;
+       }
+       return v;
+     }
+
+     function setSavedPace(v) {
+       lscache.set('pace',v);
      }
     </script>
 
@@ -76,7 +90,7 @@
 
     <main class="content">
       <div x-data="{
-                   predefined: [1.1,1.05,1,0.95,0.9,0.85,0.8], pc: '04:15', free: 102,
+                   predefined: [1.1,1.05,1,0.95,0.9,0.85,0.8], pc: getSavedPace('04:15'), free: 102,
                    distances: [1,3,5,10,15,21.1,42.2]
                    }"
       >
