@@ -226,17 +226,26 @@ func fqdn(host, domain string) string {
 	return host + "." + domain
 }
 
+func staticContentMiddlewares(webDir, index string) []echo.MiddlewareFunc {
+	return []echo.MiddlewareFunc{
+		middleware.GzipWithConfig(middleware.GzipConfig{
+			Level: 5,
+		}),
+		middleware.StaticWithConfig(middleware.StaticConfig{
+			Root:    webDir,
+			Skipper: middleware.DefaultSkipper,
+			Index:   index,
+		}),
+	}
+}
+
 func (w *webOpts) Execute(args []string) error {
 	handlers = append(handlers,
 		web.RouteSetup{ // this one is here as it needs the WebDir
 			Host:   "pace",
 			Prefix: "",
 			Setup: func(wb *web.Web, g *echo.Group) {
-				g.Use(middleware.StaticWithConfig(middleware.StaticConfig{
-					Root:    w.WebDir,
-					Skipper: middleware.DefaultSkipper,
-					Index:   "pace.html",
-				}))
+				g.Use(staticContentMiddlewares(w.WebDir, "pace.html")...)
 			},
 		})
 	for i, h := range w.Hosts {
@@ -257,11 +266,7 @@ func (w *webOpts) Execute(args []string) error {
 			Host:   "www",
 			Prefix: "",
 			Setup: func(wb *web.Web, g *echo.Group) {
-				g.Use(middleware.StaticWithConfig(middleware.StaticConfig{
-					Root:    w.WebDir,
-					Skipper: middleware.DefaultSkipper,
-					Index:   "index.html",
-				}))
+				g.Use(staticContentMiddlewares(w.WebDir, "index.html")...)
 			},
 		},
 		web.RouteSetup{

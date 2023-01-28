@@ -28,3 +28,7 @@ header img {
 .numbers {
     width: 65px;
 }
+
+:root {
+         color-scheme: light only;
+       }

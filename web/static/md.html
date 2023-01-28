@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Markdown Editor</title>
+    <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <script src="./marked/4.2.12/marked.min.js"></script>
+    <meta name="color-scheme" content="light only">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/picnic">
+
+    <script>
+     document.addEventListener("alpine:initializing", () => {
+       Alpine.directive(
+         "markdown",
+         (el, { expression }, { effect, evaluateLater }) => {
+           let getHTML = evaluateLater(expression);
+
+           effect(() => {
+             getHTML((input) => {
+               el.innerHTML = marked.parse(input);
+             });
+           });
+         }
+       );
+     });
+    </script>
+
+  </head>
+
+  <body>
+    <div id="editor" x-data="{input: `Hello __cruel__ world`}" >
+      <div class="flex four">
+        <span></span>
+        <span class="half">
+          <article class="card">
+            <h3>Markdown</h3>
+            <textarea x-model="input" rows="10"></textarea>
+          </article>
+        </span>
+        <span></span>
+      </div>
+      <div class="flex four">
+        <span></span>
+        <span class="half">
+          <article class="card">
+            <card x-markdown="input"></card>
+          </article>
+        </span>
+        <span></span>
+      </div>
+  </body>
+</html>
