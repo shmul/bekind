@@ -209,7 +209,7 @@ var handlers = []web.RouteSetup{
 	},
 	{
 		Host:   "echo",
-		Prefix: "/echo",
+		Prefix: "",
 		Setup: func(w *web.Web, g *echo.Group) {
 			g.GET("", func(c echo.Context) error {
 				reqDump, err := httputil.DumpRequest(c.Request(), true)
@@ -262,6 +262,13 @@ func (w *webOpts) Execute(args []string) error {
 
 	zfm := zifim.New()
 	handlers = append(handlers,
+		web.RouteSetup{
+			Host:   "md",
+			Prefix: "",
+			Setup: func(wb *web.Web, g *echo.Group) {
+				g.Use(staticContentMiddlewares(w.WebDir, "md.html")...)
+			},
+		},
 		web.RouteSetup{
 			Host:   "www",
 			Prefix: "",
