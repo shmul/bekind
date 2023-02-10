@@ -5,7 +5,7 @@
     <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <script src="./marked/4.2.12/marked.min.js"></script>
     <meta name="color-scheme" content="light only">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/picnic">
+    <link rel="stylesheet" href="https://unpkg.com/mvp.css@1.12/mvp.css">
 
     <script>
      document.addEventListener("alpine:initializing", () => {
@@ -27,25 +27,14 @@
   </head>
 
   <body>
-    <div id="editor" x-data="{input: `Hello __cruel__ world`}" >
-      <div class="flex four">
-        <span></span>
-        <span class="half">
-          <article class="card">
-            <h3>Markdown</h3>
-            <textarea x-model="input" rows="10"></textarea>
-          </article>
-        </span>
-        <span></span>
+    <main>
+      <div id="editor" x-data="{input: `Hello __cruel__ world`}" >
+        <article>
+          <h3>Markdown</h3>
+          <textarea x-model="input" rows="14"></textarea>
+          <div x-markdown="input"></div>
+        </article>
       </div>
-      <div class="flex four">
-        <span></span>
-        <span class="half">
-          <article class="card">
-            <card x-markdown="input"></card>
-          </article>
-        </span>
-        <span></span>
-      </div>
+    </main>
   </body>
 </html>
