@@ -30,5 +30,21 @@ header img {
 }
 
 :root {
-         color-scheme: light only;
-       }
+    color-scheme: light only;
+}
+
+/* from https://github.com/sindresorhus/github-markdown-css */
+.markdown-body, .markdown-input {
+		box-sizing: border-box;
+		min-width: 200px;
+		max-width: 980px;
+		margin: 0 auto;
+		padding: 20px;
+}
+
+
+@media (max-width: 767px) {
+		.markdown-body, .markdown-input {
+			  padding: 15px;
+		}
+}
