@@ -5,11 +5,9 @@
     <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <script src="./marked/4.2.12/marked.min.js"></script>
     <meta name="color-scheme" content="light only">
-    <link rel="stylesheet" href="./github-markdown-css/5.2.0/github-markdown-light.css"/>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/purecss@3.0.0/build/pure-min.css" integrity="sha384-X38yfunGUhNzHpBaEBsWLO+A0HDYOQi8ufWDkZ0k9e0eXz/tH3II7uKZ9msv++Ls" crossorigin="anonymous">
+
     <link rel="stylesheet" href="./bekind.css"/>
-    <img alt="zifim logo" src="./images/zifim-logo.jpg" width="100" style="float:right" />
-
-
     <script>
      document.addEventListener("alpine:initializing", () => {
        Alpine.directive(
@@ -25,26 +23,51 @@
          }
        );
      });
+
+     // from        alert("data copied");
+     function copy_data(containerid) {
+       var range = document.createRange();
+       range.selectNode(containerid); //changed here
+       window.getSelection().removeAllRanges();
+       window.getSelection().addRange(range);
+       document.execCommand("copy");
+       window.getSelection().removeAllRanges();
+     }
     </script>
 
   </head>
 
   <body>
     <main>
-      <div id="editor" x-data="{input: `Hello __cruel__ world`}" >
-        <article>
-          <center>
-            <h2>
-              Markdown
-            </h2>
-          </center>
-          <div class="markdown-input">
-            <textarea x-model="input" rows="20" cols="115"></textarea>
-          <hr/>
+      <article>
+        <div class="pure-g">
+          <div class="pure-u-1-8"></div>
+          <div class="pure-u-3-4">
+            <center><h2>Markdown</h2></center>
           </div>
-          <div x-markdown="input" class="markdown-body"></div>
-        </article>
-      </div>
+          <div class="pure-u-1-8">
+            <img alt="zifim logo" src="./images/zifim-logo.jpg" width="100" style="float:right" />
+          </div>
+        </div>
+
+        <div id="editor" x-data="{input: `Hello __cruel__ world`}" >
+          <div class="pure-g">
+            <div class="markdown-input">
+              <textarea x-model="input" rows="20" cols="115" autofocus></textarea>
+              <hr/>
+            </div>
+          </div>
+          <div class="pure-g">
+            <div class="pure-u-3-4"></div>
+            <div class="pure-u-1-4">
+              <button class="pure-button" type="button" @click="copy_data($refs.mdtext)">
+                Copy to Clipboard
+              </button>
+            </div>
+          </div>
+          <div x-markdown="input" x-ref="mdtext" class="markdown-body"></div>
+        </div>
+      </article>
     </main>
   </body>
 </html>
