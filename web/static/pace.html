@@ -103,50 +103,58 @@
 
         <div class="col-1-2">
           <table>
-            <tr>
-              <th colspan="2">
-                <form>
-                  <label for="base">Base Pace (mm:ss)</label>
-                  <input type="time" id="pace" name="pc" min="02:00" max="09:00" x-model="pc" value="04:15" required>
-                  <!-- <label for="base">%</label> -->
-                  <select name="factor_options" x-model="factor" class="">
-                    <template x-for="option in options" :key="option">
-                      <option :value="option" x-text="option" :selected="option===factor"></option>
-                    </template>
-                  </select>
-                  %
-                </form>
-              </th>
-            </tr>
-            <tr>
-              <td>
-                <input id="free" type="number" class="numbers" x-model="free" min="50" max="150" /> %
-              </td>
-              <td>
-                <span x-html="pace(pc,free/100)">
-                </span>
-              </td>
-            </tr>
-            <template x-for="p in predefined">
+            <thead class="wide">
               <tr>
-                <td><span x-html="((1+p*factor*0.01)*100).toFixed(0) + ' %'"></span></td>
-                <td><span x-html="pace(pc,(1+p*factor*0.01))"></span></td>
+                <th colspan="2">
+                  <form>
+                    <label for="base">Base Pace (mm:ss)</label>
+                    <input type="time" id="pace" name="pc" min="02:00" max="09:00" x-model="pc" value="04:15" required>
+                    <!-- <label for="base">%</label> -->
+                    <select name="factor_options" x-model="factor" class="">
+                      <template x-for="option in options" :key="option">
+                        <option :value="option" x-text="option" :selected="option===factor"></option>
+                      </template>
+                    </select>
+                    %
+                  </form>
+                </th>
               </tr>
-            </template>
+            </thead>
+            <tbody>
+              <tr>
+                <td>
+                  <input id="free" type="number" class="numbers" x-model="free" min="50" max="150" /> %
+                </td>
+                <td>
+                  <span x-html="pace(pc,free/100)">
+                  </span>
+                </td>
+              </tr>
+              <template x-for="p in predefined">
+                <tr>
+                  <td><span x-html="((1+p*factor*0.01)*100).toFixed(0) + ' %'"></span></td>
+                  <td><span x-html="pace(pc,(1+p*factor*0.01))"></span></td>
+                </tr>
+              </template>
+            </tbody>
           </table>
         </div>
 
         <div class="col-1-2">
           <table>
-            <tr>
-              <th colspan="2">Races time</th>
-            </tr>
-            <template x-for="d in distances">
+            <thead>
               <tr>
-                <td><span x-html="d + ' km'"></span></td>
-                <td><span x-html="overall(pc,d)"></span></td>
+                <th colspan="2">Races time</th>
               </tr>
-            </template>
+            </thead>
+            <tbody>
+              <template x-for="d in distances">
+                <tr>
+                  <td><span x-html="d + ' km'"></span></td>
+                  <td><span x-html="overall(pc,d)"></span></td>
+                </tr>
+              </template>
+            </tbody>
           </table>
         </div>
       </div>
